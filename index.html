@@ -1,0 +1,386 @@
+<title>NID リンクハブ</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Zen+Kaku+Gothic+New:wght@400;500;700&display=swap">
+<style>
+/* Monochrome + single blue. White/black only, theme blue as the lone accent on interaction & favorites. Flat rows, hairline rules, pill search, self-managed favorites. */
+:root{
+  --bg:#ffffff; --fg:#000000; --line:#000000; --accent:#7a3ff0;
+  --font:"Zen Kaku Gothic New",system-ui,sans-serif;
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
+  --bg:#000000; --fg:#ffffff; --line:#ffffff; --accent:#b49bff; color-scheme:dark;
+}}
+:root[data-theme="dark"]{
+  --bg:#000000; --fg:#ffffff; --line:#ffffff; --accent:#b49bff; color-scheme:dark;
+}
+*{box-sizing:border-box}
+body{background:var(--bg);color:var(--fg);font-family:var(--font);line-height:1.6;
+  -webkit-font-smoothing:antialiased;font-weight:400;
+  font-feature-settings:"palt" 1;font-kerning:normal}
+body::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset-top,0px);
+  background:var(--bg);z-index:20}
+a{color:inherit;text-decoration:none}
+
+.top{position:sticky;top:env(safe-area-inset-top,0px);z-index:15;background:var(--bg);
+  border-bottom:1px solid var(--line)}
+.top-in{max-width:720px;margin:0 auto;
+  padding-left:max(18px,env(safe-area-inset-left,0px));
+  padding-right:max(18px,env(safe-area-inset-right,0px));
+  padding-block:16px 14px;display:flex;flex-direction:column;gap:14px}
+.mark{font-weight:700;font-size:1.2rem;letter-spacing:-.01em;color:var(--fg)}
+.search{position:relative;display:flex;align-items:center}
+.search .ico{position:absolute;left:16px;width:17px;height:17px;color:var(--fg);pointer-events:none}
+#q{width:100%;font-family:inherit;font-size:1rem;font-weight:500;color:var(--fg);
+  background:var(--bg);border:1.5px solid var(--line);border-radius:999px;
+  padding:11px 42px 11px 42px;outline:none}
+#q:focus{border-color:var(--accent)}
+#q::placeholder{color:var(--fg);font-weight:400}
+.clear{position:absolute;right:10px;border:0;background:transparent;color:var(--fg);
+  font-size:1.3rem;line-height:1;padding:6px 9px;cursor:pointer}
+.clear:hover{color:var(--accent)}
+
+main{max-width:720px;margin:0 auto;
+  padding-left:max(18px,env(safe-area-inset-left,0px));
+  padding-right:max(18px,env(safe-area-inset-right,0px));
+  padding-block:22px 60px}
+
+.sec-h{font-size:1.15rem;font-weight:700;color:var(--fg);letter-spacing:.04em;margin:0 2px}
+.rule{height:2px;background:var(--line);margin:10px 0 0}
+
+/* rows: [star] [link: name · tag · arrow] */
+.list{border-top:1px solid var(--line)}
+.row{display:flex;align-items:center;border-bottom:1px solid var(--line)}
+.star{flex:0 0 auto;border:0;background:none;cursor:pointer;color:var(--fg);
+  padding:15px 12px 15px 2px;display:flex;align-items:center}
+.star svg{width:19px;height:19px;display:block;fill:none;stroke:currentColor;stroke-width:1.5;stroke-linejoin:round}
+.star.on{color:var(--accent)}
+.star.on svg{fill:currentColor}
+.star:hover{color:var(--accent)}
+.rlink{flex:1 1 auto;min-width:0;display:flex;align-items:center;gap:12px;padding:15px 2px 15px 0}
+.rn-wrap{flex:1 1 auto;min-width:0;display:flex;flex-direction:column;gap:3px}
+.rcat{font-size:.6rem;letter-spacing:.14em;font-weight:500}
+.rn{flex:1 1 auto;min-width:0;font-size:.95rem;font-weight:500;color:var(--fg)}
+.rn-wrap .rn{flex:none}
+.tag{flex:0 0 auto;font-size:.62rem;letter-spacing:.08em;text-transform:uppercase;
+  font-weight:700;color:var(--fg)}
+.arrow{flex:0 0 auto;width:26px;height:12px;color:var(--fg)}
+.rlink:hover .rn,.rlink:hover .arrow{color:var(--accent)}
+
+.favempty{padding:18px 4px;font-size:.86rem;font-weight:400;border-bottom:1px solid var(--line)}
+
+/* category accordion */
+.cats{margin-top:44px;border-top:1px solid var(--line)}
+.cat{border-bottom:1px solid var(--line)}
+.cat-h{width:100%;display:flex;align-items:center;gap:12px;background:transparent;border:0;
+  font-family:inherit;color:var(--fg);text-align:left;cursor:pointer;padding:17px 2px}
+.cat-t{flex:1 1 auto;min-width:0;font-weight:700;font-size:1.02rem;letter-spacing:.02em}
+.cat-n{flex:0 0 auto;font-size:.82rem;font-weight:700;font-variant-numeric:tabular-nums}
+.chev{flex:0 0 auto;width:16px;height:16px;transition:transform .18s}
+.cat[data-open="1"] .chev{transform:rotate(90deg)}
+.cat[data-open="1"] .cat-t,.cat-h:hover .cat-t{color:var(--accent)}
+.panel{padding:0 2px 12px}
+.panel .row:last-child{border-bottom:0}
+.panel .star{padding-left:14px}
+
+.res-h{font-size:.92rem;font-weight:700;margin:2px 2px 8px}
+.res-h b{color:var(--accent)}
+.empty{padding:44px 6px;font-size:.92rem;font-weight:400}
+mark{background:transparent;color:var(--accent);font-weight:700}
+:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+@media (prefers-reduced-motion:reduce){*{transition:none!important}}
+</style>
+
+<div class="top">
+  <div class="top-in">
+    <div class="mark">NID LINKHUB</div>
+    <div class="search">
+      <svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.2-3.2"/></svg>
+      <input id="q" type="search" placeholder="資料を検索" autocomplete="off">
+      <button class="clear" id="clear" hidden aria-label="検索をクリア">×</button>
+    </div>
+  </div>
+</div>
+
+<main>
+  <div id="results" hidden>
+    <div class="res-h" id="res-count"></div>
+    <div class="list" id="res-list"></div>
+    <div class="empty" id="empty" hidden>該当する資料が見つかりませんでした。</div>
+  </div>
+
+  <div id="browse">
+    <div class="sec-h">よく使う</div>
+    <div class="rule"></div>
+    <div class="list" id="fav"></div>
+    <div class="cats" id="cats"></div>
+  </div>
+</main>
+
+<script>
+const CATS=[
+  {t:"履修・授業",items:[
+    {n:"学部履修ガイド2026",u:"https://palette2.nagaoka-id.ac.jp/up/college/guide/guide2026.pdf"},
+    {n:"大学院履修ガイド2026",u:"https://palette2.nagaoka-id.ac.jp/up/college/guide/daigakuinguide2026.pdf"},
+    {n:"時間割表2026",u:"https://palette2.nagaoka-id.ac.jp/up/college/guide/jikanwari2026.pdf"},
+    {n:"履修ガイダンス資料（学部）",u:"https://palette2.nagaoka-id.ac.jp/up/college/guidance/koukiguidance_gakubu2026.pdf"},
+    {n:"履修ガイダンス資料（大学院）",u:"https://palette2.nagaoka-id.ac.jp/up/college/guidance/koukiguidance_daigakuin2026.pdf"},
+    {n:"英語ガイダンス資料（2023〜入学）",u:"https://palette2.nagaoka-id.ac.jp/up/college/guidance/English_for_2026.pdf"},
+    {n:"履修登録 パレット操作ガイド",u:"https://palette2.nagaoka-id.ac.jp/up/college/guidance/palette_rishu.pdf"},
+    {n:"マイステップ 操作ガイド",u:"https://palette2.nagaoka-id.ac.jp/up/college/guidance/palette_mystep.pdf"},
+    {n:"重複履修科目登録票（願）",u:"https://palette2.nagaoka-id.ac.jp/up/college/youshiki/chouhukurisyu.pdf"},
+    {n:"Classroom マニュアル",u:"https://palette2.nagaoka-id.ac.jp/up/college/guidance/Classroom%20manual.pdf"},
+    {n:"遠隔授業に関するQ&A",u:"http://palette2.nagaoka-id.ac.jp/up/college/2024/Q&A/index.html"},
+    {n:"学事暦2026",u:"https://palette2.nagaoka-id.ac.jp/up/college/guide/gakujireki2026.pdf"},
+    {n:"令和8年度 当初行事日程",u:"https://palette2.nagaoka-id.ac.jp/up/college/guidance/nendotousyo2026.pdf"}
+  ]},
+  {t:"出席・試験・成績",items:[
+    {n:"スマホ出席 操作ガイド",u:"https://palette2.nagaoka-id.ac.jp/up/college/guidance/smartphonesyusseki.pdf"},
+    {n:"スマホ出席ガイド（PCから）",u:"https://palette2.nagaoka-id.ac.jp/up/college/guidance/smartphonesyussekiPC.pdf"},
+    {n:"公欠届（Googleフォーム）",u:"https://forms.gle/sX9xxhY3uqV9DVUU6"},
+    {n:"欠席届",u:"https://palette2.nagaoka-id.ac.jp/up/college/youshiki/kessekitodoke.pdf"},
+    {n:"学校感染症 治癒証明書",u:"https://www.nagaoka-id.ac.jp/campus/infection/"},
+    {n:"再試験 受験申請書",u:"https://palette2.nagaoka-id.ac.jp/up/college/youshiki/saishikenshinseisyo.pdf"},
+    {n:"追試験 受験申請書",u:"https://palette2.nagaoka-id.ac.jp/up/college/youshiki/tuishiken.pdf"},
+    {n:"成績評価の異議申立書（PDF）",u:"https://palette2.nagaoka-id.ac.jp/up/college/youshiki/igimoushitate.pdf"},
+    {n:"成績評価の異議申立書（Word）",u:"https://palette2.nagaoka-id.ac.jp/up/college/youshiki/igimoushitate.doc"}
+  ]},
+  {t:"撮影スタジオ・工房",items:[
+    {n:"施設予約（写真/映像/音響スタジオ・暗室 等）",u:"https://calendar.google.com/calendar/u/0/appointments/AcZssZ26DF5_RfGqpwGZlwXwBIespsjHDtApwV51KbQ="},
+    {n:"備品貸出・共通工房A 使用状況",u:"https://docs.google.com/spreadsheets/d/126roUZ9qY1NnrxR22TLMEdtSxthnwMkV/edit?usp=sharing&ouid=115134202189752922624&rtpof=true&sd=true"},
+    {n:"第4アトリエ棟 利用の手引き",u:"https://palette2.nagaoka-id.ac.jp/up/college/guide/4thatelieruse_0919.pdf"},
+    {n:"工房安全講習会 資料2026",u:"https://palette2.nagaoka-id.ac.jp/up/college/shisetsu/siryou2026.pdf"},
+    {n:"リスクアセスメントについて",u:"https://palette2.nagaoka-id.ac.jp/up/college/shisetsu/risk2026.pdf"},
+    {n:"スタジオ チェックシート",u:"https://palette2.nagaoka-id.ac.jp/up/college/shisetsu/checksheet_studio.pdf"},
+    {n:"撮影基礎｜露出",u:"https://drive.google.com/file/d/13_OIJ0YXn9xpgtMLOVurY7N_i6gR7Aib/view?usp=sharing"},
+    {n:"撮影基礎｜絞りとシャッタースピード",u:"https://drive.google.com/file/d/1g8Z5sn69CZhthmLR9E-XV_ysVd4--2SX/view?usp=sharing"},
+    {n:"撮影基礎｜被写界深度",u:"https://drive.google.com/file/d/1TBgv51UZ6755soQnMP5YLpNecDaFsttI/view?usp=sharing"},
+    {n:"撮影基礎｜ホワイトバランス",u:"https://drive.google.com/file/d/1Z3p9l3NRF0Pjj147ql8f58mQkjt7eu_d/view?usp=sharing"},
+    {n:"撮影基礎｜ISO",u:"https://drive.google.com/file/d/1SWdlPKDrpG7JkitpMuxiD2BCHVmvJNKf/view?usp=sharing"},
+    {n:"撮影基礎｜レンズ",u:"https://drive.google.com/file/d/1pyuv18h_PSJwtNHt9mEZAhOrQeU95kx9/view?usp=sharing"},
+    {n:"ストロボとは",u:"https://drive.google.com/file/d/1EFgcgev5Fmnduo8XO91RmT6hKMayz85B/view?usp=sharing"},
+    {n:"ストロボ操作",u:"https://drive.google.com/file/d/1rughkqBYmfbVl621HsSfy_H7VBZPBG0I/view?usp=sharing"},
+    {n:"ジェネ操作",u:"https://drive.google.com/file/d/1OwjToQA2Mwu-aiUHhrqiQivJ1eTy5-CW/view?usp=sharing"},
+    {n:"硬い光と柔らかい光",u:"https://drive.google.com/file/d/1rlYVhdjPu7DsqOAtIiF8eUbvN5bP37Ht/view?usp=sharing"},
+    {n:"背景紙",u:"https://drive.google.com/file/d/14W19gT9PGH2_ARGKRJN-tEQZwy5EMHb_/view?usp=sharing"},
+    {n:"バックペーパーの交換",u:"https://drive.google.com/file/d/1uBHnbeLc1xnbA3WHTPb7yBbe0bd67_RF/view?usp=sharing"},
+    {n:"三脚（ベルボン）",u:"https://drive.google.com/file/d/1dKFv8_4lbUYD5CLjUJhXVBXfi3_2d_m_/view?usp=sharing"},
+    {n:"三脚（ジッツオ）",u:"https://drive.google.com/file/d/1AmrDGWk2FxjsLk9fPx4-Hfqjadyv82YP/view?usp=sharing"},
+    {n:"スタジオB 配電盤",u:"https://drive.google.com/file/d/1PJ3oqE1B6g8zeObeOcAdIzSTDY0ihOpS/view?usp=sharing"},
+    {n:"スタジオB バトン操作盤",u:"https://drive.google.com/file/d/1huGb0Rq693p8Huzhx7lxRvQy5brLStc2/view?usp=sharing"},
+    {n:"スタジオB カーテン",u:"https://drive.google.com/file/d/1Ot2x3Dg2KYvgtU9d8BlLJbWdFBfIaRWL/view?usp=sharing"}
+  ]},
+  {t:"活動・イベント運営",items:[
+    {n:"施設等使用願い（授業・展示物品借用）",u:"https://palette2.nagaoka-id.ac.jp/up/college/youshiki/shisetsushiyounegai.pdf"},
+    {n:"課外活動申請書（Excel）",u:"https://palette2.nagaoka-id.ac.jp/up/college/youshiki/kagaikatsudou20230420.xlsx"},
+    {n:"集会（行事）等開催届",u:"https://palette2.nagaoka-id.ac.jp/up/college/youshiki/syuukaitoukaisaitodoke.pdf"},
+    {n:"印刷物等配布届",u:"https://palette2.nagaoka-id.ac.jp/up/college/youshiki/insatsubututouhaifutodoke.pdf"},
+    {n:"募金・物品販売等願",u:"https://palette2.nagaoka-id.ac.jp/up/college/youshiki/bokinbuppinnhanbaitounegai.pdf"},
+    {n:"音響機器等使用届",u:"https://palette2.nagaoka-id.ac.jp/up/college/youshiki/onkyokikitousiyoutodoke.pdf"}
+  ]},
+  {t:"キャリア・就活",items:[
+    {n:"キャリアデザインガイド",u:"http://palette2.nagaoka-id.ac.jp/up/college/2024/guide/NID_CareerDesignGuide.pdf"},
+    {n:"長岡造形大学 履歴書（就活用）",u:"https://palette2.nagaoka-id.ac.jp/up/college/2024/career/NID_rirekisyo_since2022.pdf"},
+    {n:"履歴書・性別欄なし（就活用）",u:"https://palette2.nagaoka-id.ac.jp/up/college/2024/career/NID_rirekisyo-2_since2022.pdf"},
+    {n:"履歴書 説明・記入例（就活用）",u:"https://palette2.nagaoka-id.ac.jp/up/college/2024/career/NID_rirekisyo_setumei_since2022.pdf"},
+    {n:"求人検索NAVI",u:"https://www2.kyujin-navi.com/GAKUGAI/login/login.asp?mode=login"},
+    {n:"求人検索NAVI PC版マニュアル",u:"https://palette2.nagaoka-id.ac.jp/up/college/kyujinnavi/kyujinnavi_pc.pdf"},
+    {n:"求人検索NAVI スマホ版マニュアル",u:"https://palette2.nagaoka-id.ac.jp/up/college/kyujinnavi/kyujinnavi_phone.pdf"},
+    {n:"イケてる作品紹介（美大芸大就活ナビ）",u:"https://bidai-geidai.jp/library/ikesaku"},
+    {n:"残念なポートフォリオとは（動画）",u:"https://www.youtube.com/watch?v=VVF4nX7JwKI"},
+    {n:"ポートフォリオは質or量？（動画）",u:"https://www.youtube.com/watch?v=GIg5OBzsHT4"}
+  ]},
+  {t:"手続き・証明書",items:[
+    {n:"各種証明書 交付願",u:"https://www.nagaoka-id.ac.jp/graduate/certificate/"},
+    {n:"学生記録票変更届（氏名）",u:"https://palette2.nagaoka-id.ac.jp/up/college/youshiki/gakuseikirokuhyou_henkou.pdf"},
+    {n:"駐車場利用届（Googleフォーム）",u:"https://forms.gle/PiZQrBM8uPfhjTZw8"},
+    {n:"TOEIC 単位認定願（令和5〜入学）",u:"https://palette2.nagaoka-id.ac.jp/up/college/youshiki/TOEICtanininteinegai2023.pdf"},
+    {n:"ボランティア実習 事前申請シート",u:"https://palette2.nagaoka-id.ac.jp/up/college/youshiki/volunteerjizenshinsei.pdf"},
+    {n:"ボランティア実習 実施証明書",u:"https://palette2.nagaoka-id.ac.jp/up/college/youshiki/volunteerzissisyoumei.pdf"},
+    {n:"図書館資料 購入希望申請書",u:"https://palette2.nagaoka-id.ac.jp/up/college/youshiki/tosyo_kounyu.pdf"}
+  ]},
+  {t:"お金（学費・バイト・奨学金）",items:[
+    {n:"授業料 延納・分納について",u:"https://palette2.nagaoka-id.ac.jp/up/college/youshiki/zyugyouryousetsumei.pdf"},
+    {n:"授業料 延納・分納申請書",u:"https://palette2.nagaoka-id.ac.jp/up/college/youshiki/zyugyouryousinsei.pdf"},
+    {n:"長岡でのアルバイト勤務にあたり",u:"https://palette2.nagaoka-id.ac.jp/up/college/youshiki/Arbeit_setsumei.pdf"},
+    {n:"確定申告について",u:"https://palette2.nagaoka-id.ac.jp/up/college/youshiki/Arbeit_kakuteishinkoku.pdf"},
+    {n:"JASSO 在学採用（給付・貸与）",u:"https://www.jasso.go.jp/shogakukin/moshikomi/zaigaku/index.html"},
+    {n:"スカラネット・パーソナル（機構奨学金）",u:"https://scholar-ps.sas.jasso.go.jp/mypage/"},
+    {n:"家計急変（給付奨学金）",u:"https://palette2.nagaoka-id.ac.jp/up/college/shogakukin/link_kakeikyuhen.htm"},
+    {n:"学修計画書（給付・貸与共通）",u:"https://palette2.nagaoka-id.ac.jp/up/college/shogakukin/gakusyuukeikaku.pdf"},
+    {n:"外部奨学金情報",u:"http://palette2.nagaoka-id.ac.jp/up/college/2024/gakusei/scholarship3.html"},
+    {n:"国際交流事業支援奨学金",u:"https://palette2.nagaoka-id.ac.jp/up/college/campuslife/kokusaisyogakukin.pdf"},
+    {n:"学生納付特例制度（年金／日本年金機構）",u:"https://www.nenkin.go.jp/tokusetsu/gakusei.html"}
+  ]},
+  {t:"相談・生活サポート",items:[
+    {n:"教員・事務局メールアドレス",u:"https://palette2.nagaoka-id.ac.jp/up/college/campuslife/mail.pdf"},
+    {n:"内線番号表",u:"https://palette2.nagaoka-id.ac.jp/up/college/phone_number/phone_number_table.pdf"},
+    {n:"オフィスアワー（2026.4.10版）",u:"https://docs.google.com/spreadsheets/d/1sUU-UF8SNVAZcXNysg9W5eXt-PjB3Ae44K8JbMIYVBE/edit?gid=0#gid=0"},
+    {n:"教員紹介（大学公式サイト）",u:"https://www.nagaoka-id.ac.jp/about/teacher/"},
+    {n:"学生相談室 利用案内",u:"https://palette2.nagaoka-id.ac.jp/up/college/campuslife/imu_gakuseisoudan.pdf"},
+    {n:"修学上こまったときの相談窓口",u:"https://palette2.nagaoka-id.ac.jp/up/college/campuslife/shugakutokubetsu2025-web.pdf"},
+    {n:"こころとからだの相談窓口",u:"https://palette2.nagaoka-id.ac.jp/up/college/campuslife/kokoronosoudanmadoguti.pdf"},
+    {n:"キャンパスガイド2026（ルール・マップ）",u:"https://palette2.nagaoka-id.ac.jp/up/college/guide/campusguide.pdf"},
+    {n:"キャンパス風景マップ",u:"https://palette2.nagaoka-id.ac.jp/up/college/guide/campushuukeimap.pdf"},
+    {n:"路線バス 時刻表",u:"https://palette2.nagaoka-id.ac.jp/up/college/campuslife/bus.pdf"},
+    {n:"避難経路図・避難場所",u:"https://palette2.nagaoka-id.ac.jp/up/college/campuslife/hinankeiro_R4.pdf"},
+    {n:"住民票を異動しよう",u:"https://palette2.nagaoka-id.ac.jp/up/college/campuslife/juuminhyou_idou.pdf"},
+    {n:"海外渡航手続き",u:"https://palette2.nagaoka-id.ac.jp/up/college/campuslife/kaigaitokou.html"},
+    {n:"留学情報（イベント・奨学金）",u:"https://palette2.nagaoka-id.ac.jp/up/college/campuslife/scholarship_%EF%BD%87.html"},
+    {n:"ごみと資源物の分け方（長岡市）",u:"https://www.city.nagaoka.niigata.jp/kurashi/cate08/h2504hozon.html"},
+    {n:"粗大ごみの捨て方（長岡市）",u:"https://www.city.nagaoka.niigata.jp/kurashi/cate08/sodai-gomi.html"},
+    {n:"雪道の通行に注意",u:"https://palette2.nagaoka-id.ac.jp/up/college/campuslife/yukimichi.pdf"},
+    {n:"学部1年生 ロッカー貸与について",u:"https://palette2.nagaoka-id.ac.jp/up/college/campuslife/2021rokka.pdf"}
+  ]},
+  {t:"大学のサービス",items:[
+    {n:"学生用Gmail",u:"http://mail.google.com/a/st.nagaoka-id.ac.jp/"},
+    {n:"附属図書館 OPAC（蔵書検索）",u:"http://opac.nagaoka-id.ac.jp/"},
+    {n:"OPAC（蔵書検索）の使い方",u:"https://palette2.nagaoka-id.ac.jp/up/college/youshiki/manual_OPAC.pdf"},
+    {n:"長岡造形大学 リポジトリ",u:"https://nagaoka-id.repo.nii.ac.jp/"},
+    {n:"プロトタイピングルーム ポータル",u:"https://sites.google.com/view/prototypingroom/"},
+    {n:"e-campus 各種手続き・設定方法",u:"https://palette2.nagaoka-id.ac.jp/up/college/e-campus2024/e-campus_setting.html"},
+    {n:"パレット操作マニュアル",u:"https://palette2.nagaoka-id.ac.jp/up/college/guidance/palette_manual.pdf"},
+    {n:"本学公式ホームページ",u:"http://www.nagaoka-id.ac.jp/"},
+    {n:"校友会",u:"http://nid-aa.jp/"},
+    {n:"不審者情報等 投稿フォーム",u:"https://forms.gle/ZdnMUyECnCsk7XjZ7"},
+    {n:"東京シャトルバス 運行について",u:"https://drive.google.com/file/d/1uhX-w94sJSmMu_M_dbZZUlsR0NIFmCxo/view?usp=sharing"},
+    {n:"東京シャトルバス 日程＆申込状況",u:"https://docs.google.com/spreadsheets/d/1JBbpaYXX1qaOMM54OEfTT2rtJ7-Arv0rgJniiJ7Wzh8/edit?usp=sharing"},
+    {n:"カルラン・トレンドブック（stアカウント）",u:"https://drive.google.com/drive/folders/1jYN4dL1-X_zwCix14M1NuiXeIVym26sF?usp=sharing"}
+  ]},
+  {t:"規則・ガイドライン",items:[
+    {n:"学則",u:"https://palette2.nagaoka-id.ac.jp/up/college/kisoku/gakusoku.pdf"},
+    {n:"履修規程",u:"https://palette2.nagaoka-id.ac.jp/up/college/kisoku/risyukitei.pdf"},
+    {n:"教職課程 履修規程",u:"https://palette2.nagaoka-id.ac.jp/up/college/kisoku/kyousyokurisyukitei.pdf"},
+    {n:"学芸員課程 履修規程",u:"https://palette2.nagaoka-id.ac.jp/up/college/kisoku/gakugeiinrishukitei.pdf"},
+    {n:"学位規程",u:"https://palette2.nagaoka-id.ac.jp/up/college/kisoku/gakuikitei.pdf"},
+    {n:"学生規程",u:"https://palette2.nagaoka-id.ac.jp/up/college/kisoku/gakuseikitei.pdf"},
+    {n:"授業料等の減免に関する規程",u:"https://palette2.nagaoka-id.ac.jp/up/college/kisoku/zyugyouryougenmenkiteir2.pdf"},
+    {n:"学生表彰規程",u:"https://palette2.nagaoka-id.ac.jp/up/college/kisoku/gakuseihyousyoukitei.pdf"},
+    {n:"優秀学生賞規程",u:"https://palette2.nagaoka-id.ac.jp/up/college/kisoku/yushugakuseisyoukitei.pdf"},
+    {n:"ハラスメント防止等に関する規程",u:"https://palette2.nagaoka-id.ac.jp/up/college/kisoku/harassmentboushi.pdf"},
+    {n:"ハラスメント対策 運用マニュアル",u:"https://palette2.nagaoka-id.ac.jp/up/college/kisoku/harassmenttaisaku.pdf"},
+    {n:"知的財産取扱規程",u:"https://palette2.nagaoka-id.ac.jp/up/college/kisoku/chizaitoriatsukai.pdf"},
+    {n:"研究活動行動規範",u:"https://palette2.nagaoka-id.ac.jp/up/college/kisoku/kenkyukoudoukatudoukihan.pdf"},
+    {n:"学生会 会則",u:"https://palette2.nagaoka-id.ac.jp/up/college/kisoku/kitei-gakuseikai2.pdf"},
+    {n:"クラブハウス使用規程",u:"https://palette2.nagaoka-id.ac.jp/up/college/kisoku/clubhousekiteir7.pdf"},
+    {n:"SOGIの多様性と学生生活ガイドライン",u:"https://palette2.nagaoka-id.ac.jp/up/college/kisoku/sogi.pdf"}
+  ]},
+  {t:"データ・調査結果",items:[
+    {n:"令和6年度 学生生活実態調査 集計結果",u:"https://palette2.nagaoka-id.ac.jp/up/college/chosa/R6jittaityousa.pdf"},
+    {n:"令和6年度 実態調査 自由記述への回答",u:"https://palette2.nagaoka-id.ac.jp/up/college/chosa/R6jiyukijutsu.pdf"},
+    {n:"令和6年度前期 授業評価アンケート結果",u:"https://palette2.nagaoka-id.ac.jp/up/college/jugyohyoka/R6zenki/jugyohyoukar6a.htm"},
+    {n:"令和5年度後期 授業評価アンケート結果",u:"https://palette2.nagaoka-id.ac.jp/up/college/jugyohyoka/R5kouki/jugyohyoukar5b.htm"}
+  ]}
+];
+
+const DEFAULT_FAVS=[
+  "https://palette2.nagaoka-id.ac.jp/up/college/guide/gakujireki2026.pdf",
+  "https://palette2.nagaoka-id.ac.jp/up/college/campuslife/mail.pdf",
+  "https://palette2.nagaoka-id.ac.jp/up/college/phone_number/phone_number_table.pdf",
+  "https://calendar.google.com/calendar/u/0/appointments/AcZssZ26DF5_RfGqpwGZlwXwBIespsjHDtApwV51KbQ=",
+  "https://palette2.nagaoka-id.ac.jp/up/college/guide/guide2026.pdf",
+  "https://palette2.nagaoka-id.ac.jp/up/college/guidance/koukiguidance_gakubu2026.pdf"
+];
+
+const ALL=[]; const BYURL={};
+CATS.forEach(c=>c.items.forEach(it=>{const o={n:it.n,u:it.u,cat:c.t};ALL.push(o);if(!BYURL[it.u])BYURL[it.u]=o;}));
+
+function tagFor(u){
+  const s=u.toLowerCase();
+  if(/forms\.gle|\/forms\//.test(s))return"Form";
+  if(/docs\.google\.com\/spreadsheets/.test(s))return"Sheet";
+  if(/youtube\.com|youtu\.be/.test(s))return"動画";
+  if(/drive\.google\.com|docs\.google\.com/.test(s))return"Drive";
+  if(/\.pdf(\?|#|$)/.test(s))return"PDF";
+  if(/\.docx?(\?|#|$)/.test(s))return"Word";
+  if(/\.xlsx?(\?|#|$)/.test(s))return"Excel";
+  return"Web";
+}
+const ARROW='<svg class="arrow" viewBox="0 0 34 12" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"><path d="M1 6h30"/><path d="M26 1l6 5-6 5"/></svg>';
+const STAR='<svg viewBox="0 0 24 24"><path d="M12 2.6l2.9 5.9 6.5.95-4.7 4.58 1.11 6.47L12 17.9 6.19 20.5l1.11-6.47L2.6 9.45l6.5-.95z"/></svg>';
+
+function loadFavs(){try{const s=localStorage.getItem('nid_favs');if(s){const a=JSON.parse(s);if(Array.isArray(a))return a;}}catch(e){}return DEFAULT_FAVS.slice();}
+function saveFavs(){try{localStorage.setItem('nid_favs',JSON.stringify(favs));}catch(e){}}
+let favs=loadFavs();
+const isFav=u=>favs.indexOf(u)>=0;
+
+function rowHTML(u,nameHTML,catLabel){
+  const on=isFav(u)?' on':'';
+  const body=catLabel
+    ? `<span class="rn-wrap"><span class="rcat">${catLabel}</span><span class="rn">${nameHTML}</span></span>`
+    : `<span class="rn">${nameHTML}</span>`;
+  return `<div class="row"><button class="star${on}" data-u="${encodeURIComponent(u)}" aria-label="お気に入り">${STAR}</button>`
+    + `<a class="rlink" href="${u}" target="_blank" rel="noopener">${body}<span class="tag">${tagFor(u)}</span>${ARROW}</a></div>`;
+}
+
+const favEl=document.getElementById('fav');
+function renderFav(){
+  if(!favs.length){favEl.innerHTML='<div class="favempty">★を押すと、ここに追加されます。</div>';return;}
+  favEl.innerHTML=favs.map(u=>{const o=BYURL[u];return o?rowHTML(u,o.n,null):'';}).join('');
+}
+function syncStars(u){
+  document.querySelectorAll('.star').forEach(b=>{
+    if(decodeURIComponent(b.dataset.u)===u)b.classList.toggle('on',isFav(u));
+  });
+}
+function toggleFav(u){
+  const i=favs.indexOf(u);
+  if(i>=0)favs.splice(i,1);else favs.push(u);
+  saveFavs();renderFav();syncStars(u);
+}
+document.addEventListener('click',e=>{
+  const b=e.target.closest('.star');
+  if(!b)return;
+  e.preventDefault();
+  toggleFav(decodeURIComponent(b.dataset.u));
+});
+
+const catsEl=document.getElementById('cats');
+catsEl.innerHTML=CATS.map((cat,i)=>{
+  const rows=cat.items.map(it=>rowHTML(it.u,it.n,null)).join('');
+  return `<section class="cat" data-open="0">
+    <button class="cat-h" aria-expanded="false" aria-controls="p${i}">
+      <span class="cat-t">${cat.t}</span>
+      <span class="cat-n">${cat.items.length}</span>
+      <svg class="chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m9 6 6 6-6 6"/></svg>
+    </button>
+    <div class="panel" id="p${i}" hidden>${rows}</div>
+  </section>`;
+}).join('');
+
+const sections=[...catsEl.querySelectorAll('.cat')];
+function setOpen(sec,open){
+  sec.dataset.open=open?'1':'0';
+  sec.querySelector('.cat-h').setAttribute('aria-expanded',open?'true':'false');
+  sec.querySelector('.panel').hidden=!open;
+}
+sections.forEach(sec=>{
+  sec.querySelector('.cat-h').addEventListener('click',()=>setOpen(sec,sec.dataset.open!=='1'));
+});
+
+const q=document.getElementById('q');
+const clearBtn=document.getElementById('clear');
+const browse=document.getElementById('browse');
+const results=document.getElementById('results');
+const resList=document.getElementById('res-list');
+const resCount=document.getElementById('res-count');
+const emptyEl=document.getElementById('empty');
+function esc(s){return s.replace(/[.*+?^${}()|[\]\\]/g,'\\$&');}
+function hl(name,raw){return raw?name.replace(new RegExp('('+esc(raw)+')','ig'),'<mark>$1</mark>'):name;}
+function run(){
+  const raw=q.value.trim();
+  const term=raw.toLowerCase();
+  clearBtn.hidden=!raw;
+  if(!term){results.hidden=true;browse.hidden=false;return;}
+  browse.hidden=true;results.hidden=false;
+  const m=ALL.filter(x=>x.n.toLowerCase().includes(term));
+  resCount.innerHTML='検索結果 <b>'+m.length+'</b> 件';
+  emptyEl.hidden=m.length>0;
+  resList.innerHTML=m.map(x=>rowHTML(x.u,hl(x.n,raw),x.cat)).join('');
+}
+q.addEventListener('input',run);
+clearBtn.addEventListener('click',()=>{q.value='';q.focus();run();});
+
+renderFav();
+</script>
