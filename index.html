@@ -90,9 +90,13 @@ main{max-width:720px;margin:0 auto;
 .chev{flex:0 0 auto;width:16px;height:16px;transition:transform .18s}
 .cat[data-open="1"] .chev{transform:rotate(90deg)}
 .cat[data-open="1"] .cat-t,.cat-h:hover .cat-t{color:var(--accent)}
-.panel{padding:0 2px 12px}
+/* open panel: indented under an accent bar, lighter & tighter rows so the category rules stay dominant */
+.panel{margin:0 0 16px 2px;padding-left:14px;border-left:2px solid var(--accent)}
+.panel .row{border-bottom:1px solid color-mix(in srgb,var(--fg) 16%,transparent)}
 .panel .row:last-child{border-bottom:0}
-.panel .star{padding-left:14px}
+.panel .star{padding-block:11px}
+.panel .rlink{padding-block:11px}
+.panel .rn{font-size:.9rem}
 
 .res-h{font-size:.92rem;font-weight:700;margin:2px 2px 8px}
 .res-h b{color:var(--accent)}
